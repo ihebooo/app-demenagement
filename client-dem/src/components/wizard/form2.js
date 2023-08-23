@@ -8,12 +8,10 @@ import TableDevi from './tabledevi';
 import { api_nestjs } from '../../utils/client';
 import { useMutation } from 'react-query';
 import { useNavigate } from 'react-router-dom';
-import Sucess from '../sucess';
-
 
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const ClientForm = () => {
+const ClientForm = ({setIsLoading}) => {
 
   const navigate = useNavigate()
   const { handleStep, previousStep } = useWizard();
@@ -35,6 +33,15 @@ const ClientForm = () => {
     date: false,
     message : true
   });
+
+  React.useEffect(() => {
+    const storedclientForm = localStorage.getItem('clientForm');
+  
+    if (storedclientForm) {
+      setClientForm(JSON.parse(storedclientForm));
+    }
+
+  }, []);
 
 
   const handleDateChange = (date) => {
@@ -78,11 +85,18 @@ const ClientForm = () => {
   } = useMutation(async (params) => await api_nestjs.post("/api/post-request", params,),
       {  
         onSuccess : (data) => {
+          localStorage.removeItem('departForm');
+          localStorage.removeItem('arriveeForm');
+          localStorage.removeItem('clientForm');
+          localStorage.removeItem('meubles')
+          localStorage.removeItem('currentStep')
+          setIsLoading(false)
             navigate("/success")
         },
         onError : (error) => {
           
           toast.error(error)
+          setIsLoading(false)
       }
 
       }
@@ -99,9 +113,14 @@ const ClientForm = () => {
     if(valid_form){
       
        setgState({...gState, form_client : clientForm})
+       
+       localStorage.setItem('clientForm', JSON.stringify(clientForm));
+
 
        setSubmit(true)
+
     }else{
+      toast.error("fill informations please")
 
       setSubmit(false)
     } 
@@ -110,11 +129,14 @@ const ClientForm = () => {
 
   React.useEffect(() => {
     if (submit) {
+
+      setIsLoading(true)
       console.log("form_client has been updated:", gState.form_client);
       mutate(gState);
     }
   }, [submit, gState]);
   
+
 
   return (
     <>

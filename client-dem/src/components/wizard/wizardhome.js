@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React,{ useState } from 'react'
 import Footer from '../Footer';
 import Header from '../header';
 import Wizard from './wizard'
@@ -11,12 +11,27 @@ import { RecoilRoot } from 'recoil';
 import { useRecoilState } from 'recoil';
 import { globalState } from '../../utils/atom';
 
-function WizardWrapper() {
+function WizardWrapper({setIsLoading}) {
  
   const [gState, setgState] = useRecoilState(globalState);
 
   console.log({gState})
 
+  React.useEffect(() => {
+    // Clear local storage items when the page is about to unload
+    window.onbeforeunload = () => {
+      localStorage.removeItem('departForm');
+      localStorage.removeItem('arriveeForm');
+      localStorage.removeItem('clientForm');
+      localStorage.removeItem('meubles');
+      localStorage.removeItem('currentStep');
+    };
+
+    // Clear the event handler when the component unmounts
+    return () => {
+      window.onbeforeunload = null;
+    };
+  }, []);
 
   return (
     <div className="bg-white">
@@ -34,7 +49,7 @@ function WizardWrapper() {
 
                 <Meubles/>
                 <Form1/>
-                <ClientForm/>
+                <ClientForm setIsLoading={setIsLoading}/>
 
             </WizardReact>
 
@@ -50,7 +65,7 @@ function WizardWrapper() {
 }
 
 
-export default function WizardHome(){
+export default function WizardHome({setIsLoading}){
 
-  return (<RecoilRoot><WizardWrapper/></RecoilRoot>)
+  return (<RecoilRoot><WizardWrapper setIsLoading={setIsLoading} /></RecoilRoot>)
 }

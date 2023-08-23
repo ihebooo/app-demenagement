@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Welcome to Our Platform</title>
+  <style>
+    /* Add your CSS styles here */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+/* Add your CSS styles here */
+.inline-block {
+  display: inline-block;
+}
+
+.align-bottom {
+  vertical-align: bottom;
+}
+
+.bg-white {
+  background-color: #ffffff;
+}
+
+.bg-gray {
+  background-color: #f0f0f0;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.pt-5 {
+  padding-top: 1.25rem;
+}
+
+.pb-4 {
+  padding-bottom: 1rem;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.shadow-xl {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.transition-all {
+  transition: all 0.3s ease;
+}
+
+.sm\\:my-8 {
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+}
+
+.sm\\:align-middle {
+  vertical-align: middle;
+}
+
+.sm\\:max-w-6xl {
+  max-width: 72rem;
+}
+
+.sm\\:w-full {
+  width: 100%;
+}
+
+.sm\\:p-6 {
+  padding: 1.5rem;
+}
+
+.p-4 {
+  padding: 1rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.border-collapse {
+  border-collapse: collapse;
+}
+
+.border {
+  border: 1px solid #ccc;
+}
+
+.border-gray-300 {
+  border-color: #ccc;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.bg-indigo-600 {
+  background-color: #4a90e2;
+}
+
+.text-white {
+  color: #fff;
+}
+.text-rouge{
+  color: red;
+
+}
+
+.text-gras {
+
+  font-weight: bold;
+}
+  </style>
+</head>
+<body>
+
+<h1 class="text-rouge">Information Client</h1>
+<hr>
+<h3>Client :<span class="text-gras">{{data.client.nom_prenom}}</span></h3>
+<h3>Email :<span class="text-gras">{{data.client.email}}</span></h3>
+<h3>Tel :<span class="text-gras">{{data.client.tel}}</span></h3>
+<hr>
+<h3>Date du demenagement :<span class="text-gras">{{data.date_dem2}}</span></h3>
+</hr>
+
+<hr>
+<h1 class="text-rouge">Résumé de votre demande</h1>
+<br>
+<div class="p-4">
+  <table class="w-full border-collapse border border-gray-300 shadow-lg bg-gray">
+    <thead>
+      <tr>
+        <th class="border border-gray-300 p-4 font-bold bg-indigo-600 text-white">
+          Description
+        </th>
+        <th class="border border-gray-300 p-4 font-bold bg-indigo-600 text-white">
+          Information
+        </th>
+        <th class="border border-gray-300 p-4 font-bold bg-indigo-600 text-white">
+          Quantity
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      {{#each data.devis_items}}
+        <tr>
+          <td class="border p-4">{{meuble_id.title}}</td>
+          <td class="border p-4"></td>
+          <td class="border p-4">{{quantite}}</td>
+        </tr>
+      {{/each}}
+
+      <tr>
+        <td class="border p-4">Adresse de {{data.adr_dep.type}}</td>
+        <td class="border p-4">Adresse de  {{data.adr_dep.type}}</td>
+        <td class="border p-4"></td>
+      </tr>
+      {{#each data.adr_dep}}
+          <tr>
+            <td class="border p-4">{{@key}}</td>
+            <td class="border p-4">{{this}}</td>
+            <td class="border p-4"></td>
+          </tr>
+      {{/each}}
+
+      <tr>
+        <td class="border p-4">Adresse de {{data.adr_arr.type}}</td>
+        <td class="border p-4">Adresse de {{data.adr_arr.type}}</td>
+        <td class="border p-4"></td>
+      </tr>
+      {{#each data.adr_arr}}
+          <tr>
+            <td class="border p-4">{{@key}}</td>
+            <td class="border p-4">{{this}}</td>
+            <td class="border p-4"></td>
+          </tr>
+      {{/each}}
+    </tbody>
+  </table>
+</div>
+
+
+
+
+
+</body>
+</html>

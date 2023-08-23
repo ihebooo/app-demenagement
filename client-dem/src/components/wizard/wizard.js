@@ -14,7 +14,7 @@ export default function Wizard() {
     stepCount,
   } = useWizard();
 
-  console.log({activeStep,stepCount})
+
 
   return (
     <nav aria-label="Progress">

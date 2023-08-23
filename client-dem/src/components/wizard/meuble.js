@@ -42,6 +42,17 @@ const Meubles = () => {
   );
   const [clientMeubles, setClientMeubles] = useState([]);
 
+
+
+  React.useEffect(() => {
+    const storedMeubles = localStorage.getItem('meubles');
+  
+    if (storedMeubles) {
+      setClientMeubles(JSON.parse(storedMeubles));
+    }
+
+  }, []);
+
     function meubleQuantity(meuble){
 
 
@@ -118,6 +129,8 @@ const Meubles = () => {
 
 
     setgState({...gState, meubles : form_meubles})
+    localStorage.setItem('meubles', JSON.stringify(form_meubles));
+
     nextStep()
 
 

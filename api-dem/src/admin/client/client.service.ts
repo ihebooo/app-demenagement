@@ -5,8 +5,11 @@ import { DeviItem } from 'src/models/devi_item.model';
 import { Devis } from 'src/models/devis.model';
 import {Client}  from 'src/models/client.model'
 import { Adresse,getAddressType } from 'src/models/adresse.model';
+import { MailerService } from '@nestjs-modules/mailer';
 
-import { isEmpty } from '../../utils/global/index'
+import { isEmpty ,formatDate} from '../../utils/global/index'
+
+
 @Injectable()
 
 
@@ -23,9 +26,18 @@ export class ClientService {
     private adresseModel: Repository<Adresse>,
     @InjectRepository(Client)
     private clientModel: Repository<Client>,
-
+    private readonly mailerService: MailerService
   ) {}
 
+
+  async sendWelcomeEmail(email: string, invoiceData: any): Promise<void> {
+    await this.mailerService.sendMail({
+      to: email,
+      subject: 'Welcome to Our Platform',
+      template: './devisv2', // Path to your template file
+      context: { data : invoiceData },  // Variables to use in the template
+    });
+  }
 
 
   async postDem(body) {
@@ -126,9 +138,25 @@ export class ClientService {
       // Save Multiple Devis Items (array[])
       const savedDevisItems =  await query.manager.save(DeviItem, devis_items)
 
+      console.log({savedDevisItems})
 
       await query.commitTransaction();
+
+
+      let invoiceData = await this.devisModel.findOne({
+        where : {id : devis.id},
+        relations : ["client", "adr_dep", "adr_arr", "devis_items", "devis_items.meuble_id"]
+  
+  
+      })
+
+      invoiceData["date_dem2"] = formatDate(invoiceData["date_dem"]);
+
+      console.log({invoiceData})
+  
     
+      await this.sendWelcomeEmail(savedClient.email, invoiceData)
+
       return {status :true, message : "successfully"}
 
 

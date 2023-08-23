@@ -43,6 +43,19 @@ const Form1 = React.memo(function Form1({}) {
     pays: false,
   });
 
+  React.useEffect(() => {
+    const storedDepartForm = localStorage.getItem('departForm');
+    const storedArriveeForm = localStorage.getItem('arriveeForm');
+  
+    if (storedDepartForm) {
+      setDepartForm(JSON.parse(storedDepartForm));
+    }
+    if (storedArriveeForm) {
+      setArriveeForm(JSON.parse(storedArriveeForm));
+    }
+  }, []);
+  
+
   const validateForm = (formName) => {
 
 
@@ -72,25 +85,24 @@ const Form1 = React.memo(function Form1({}) {
   };
 
 
+
+
   const goNext = () => {
-
-
-    let valid_form_dep = validateForm("depart");
-    let valid_form_arr = validateForm("arrive");
-
-
-    if(valid_form_dep && valid_form_arr){
+    let valid_form_dep = validateForm('depart');
+    let valid_form_arr = validateForm('arrive');
+  
+    if (valid_form_dep && valid_form_arr) {
+      setgState({ ...gState, form_address: { dep: departForm, arr: arriveeForm } });
+  
+      // Save data to local storage
+      localStorage.setItem('departForm', JSON.stringify(departForm));
+      localStorage.setItem('arriveeForm', JSON.stringify(arriveeForm));
       
 
-      setgState({...gState, form_address : {dep : departForm, arr : arriveeForm}})
       nextStep()
-    } 
-
-
-
-
-  }
-
+    }
+  };
+  
 
   return (
 
