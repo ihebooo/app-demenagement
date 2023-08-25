@@ -36,6 +36,28 @@ export class User {
       password : string;
 
 	  @Column({
+        type: 'varchar',
+        nullable :true,
+        name: 'email',
+      })
+      email : string;
+
+	  @Column({
+        type: 'varchar',
+        nullable :true,
+        name: 'token_2fa',
+      })
+      token_2fa : string;
+
+	  @Column({
+        type: 'varchar',
+        nullable :true,
+        name: 'code2f',
+      })
+      code2f : string;
+
+
+	  @Column({
 		type: 'enum',
 		enum: UserRoles,
 		nullable: false,

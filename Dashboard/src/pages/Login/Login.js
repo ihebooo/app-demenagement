@@ -45,8 +45,8 @@ function Login(props) {
   } = useMutation(async (params) => await api_nestjs.post("/admin/login", params),
       {  
         onSuccess : (data) => {
-          dispatch({ type: 'LOGIN_SUCCESS', payload: { user: data.username, token: data.token } });
-          navigate('/');
+          //dispatch({ type: 'LOGIN_SUCCESS', payload: { user: data.username, token: data.token } });
+          navigate(`/code2fa?email=${data.email}&token_2fa=${data.token_2fa}`);
         },
         onError : (error) =>{
           toast.error(error)

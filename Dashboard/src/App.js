@@ -14,7 +14,7 @@ import './App.css';
 import Menu from './pages/meubles/meuble';
 import Dashboard from './pages/dashboard/dashboard'
 import {Toaster} from 'react-hot-toast'
-
+import Code2fa from './pages/Login/code2fa';
 const ProtectedRoute = ({
   isAuthenticated,
   redirectPath = '/login',
@@ -43,6 +43,8 @@ function App() {
           <Toaster />
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/code2fa" element={<Code2fa />} />
+
             <Route element={<ProtectedRoute isAuthenticated={isAuthenticated} />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/orders" element={<Orders />} />

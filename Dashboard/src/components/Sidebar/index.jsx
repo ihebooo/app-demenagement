@@ -39,7 +39,7 @@ function SideBar ({ menu, children, logout }) {
       }
 
 
-    if( location.pathname.includes("login") ){
+    if(  /login|code2fa/.test(location.pathname)  ){
 
         return children
     }

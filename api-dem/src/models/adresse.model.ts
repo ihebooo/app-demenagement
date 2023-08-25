@@ -8,6 +8,8 @@ export enum AdresseType {
 export function getAddressType(typeString: string): AdresseType | undefined {
   const typeEnumKeys = Object.keys(AdresseType);
   
+  typeString = typeString.toLocaleLowerCase();
+
   for (const key of typeEnumKeys) {
     if (AdresseType[key] === typeString) {
       return AdresseType[key];

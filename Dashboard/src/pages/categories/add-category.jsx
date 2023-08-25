@@ -171,6 +171,7 @@ function Form({refresh,data,setOpen}){
                   </label>
                   <div className="mt-1">
                     <input
+                    required
                       type="text"
                       name="Category_name"
                       id="Category_name"

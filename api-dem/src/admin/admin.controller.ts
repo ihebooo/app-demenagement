@@ -30,6 +30,7 @@ import { UserRoles } from './auth/user-roles.enum';
 /***** dtos ****/
 import {
 	} from 'src/dtos/common.dto';
+import { query } from 'express';
 
 @Controller('admin')
 @UsePipes(CustomValidation)
@@ -51,6 +52,19 @@ export class userController {
 
 		return await this.userService.login(req.user);
 	}
+
+
+	@Post('verif-2fa')
+	async verifCode2fa(
+		@Request() req,
+		@Body() body,
+	): Promise<any> {
+
+		let {code, token_2fa} = body
+
+		return await this.userService.verifCode2fa(token_2fa, code);
+	}
+
 
 	@UseGuards(JwtAuthGuard, RolesGuard)
 	@HasRoles(

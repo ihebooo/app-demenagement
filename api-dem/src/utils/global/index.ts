@@ -2,6 +2,25 @@
 import moment from 'moment';
 
 
+export function generateRandomDigit(length) {
+
+  const min = 10 ** (length - 1);
+  const max = 10 ** length - 1;
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+
+}
+
+export function maskEmail(email) {
+  const parts = email.split('@');
+  const localPart = parts[0];
+  const domainPart = parts[1];
+
+  const maskedLocalPart = localPart.slice(0, 2) + '*'.repeat(localPart.length - 2);
+  const maskedDomainPart = '*'.repeat(domainPart.indexOf('.')) + domainPart.slice(domainPart.indexOf('.'));
+
+  return `${maskedLocalPart}@${maskedDomainPart}`;
+}
+
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 

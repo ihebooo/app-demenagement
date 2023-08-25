@@ -168,11 +168,13 @@ function Form({refresh,data,setOpen}){
                   </label>
                   <div className="mt-1">
                     <select
+                    required
                       id="category"
                       name="category"
                       autoComplete="category-name"
                       className=" p-2 border-2 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                     >
+                      <option>select categories</option>
                       {data && data.map((cat,index) => (<option value={cat.id} key={index}>{cat.title}</option>))}
                     </select>
                   </div>
@@ -186,6 +188,7 @@ function Form({refresh,data,setOpen}){
                   </label>
                   <div className="mt-1">
                     <input
+                    required
                       type="text"
                       name="meuble_name"
                       id="meuble_name"
@@ -204,6 +207,7 @@ function Form({refresh,data,setOpen}){
                   </label>
                   <div className="mt-1">
                     <input
+                    required
                       type="text"
                       name="meuble_image"
                       id="meuble_image"
