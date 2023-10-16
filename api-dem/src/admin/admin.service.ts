@@ -171,8 +171,11 @@ export class userService {
 
 		return this.devisModel.find({
 
-			relations : ["client", "adr_dep", "adr_arr", "devis_items", "devis_items.meuble_id"]
-
+			relations : ["client", "adr_dep", "adr_arr", "devis_items", "devis_items.meuble_id"],
+			order: {
+				created_at: 'DESC', // Sort by the created_at column in descending order
+			  },
+			
 
 		})
 

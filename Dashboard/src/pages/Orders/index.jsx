@@ -3,7 +3,6 @@ import { useQuery } from 'react-query';
 import { ChevronRightIcon, CheckCircleIcon } from '@heroicons/react/solid';
 import { MdEmail } from 'react-icons/md';
 import { BsFillTelephoneFill } from 'react-icons/bs';
-
 import { api_nestjs } from '../../utils/client';
 import{CgProfile} from 'react-icons/cg'
 import OrderModal from './modalDevi'
@@ -72,6 +71,13 @@ function Orders() {
                     </div>
                     <div className="hidden md:block">
                       <div>
+                      <p className="text-sm text-gray-900">
+            <span className="font-bold">
+               Date de création :  
+            </span>
+            <span> { formatDate(order.created_at, 'yyyy-MM-dd HH:mm')}</span>
+          </p>
+                      
                         <p className="text-sm text-gray-900">
                           <span className='font-bold'>date demenagement : </span><span>{formatDate(order.date_dem)}</span>
                         </p>
