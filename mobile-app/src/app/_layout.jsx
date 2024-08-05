@@ -90,6 +90,13 @@ function RootLayoutNav() {
                     title: "Step 3: Enter Contact Details",
                   }}
                 />
+                <Stack.Screen
+                  name="success"
+                  options={{
+                    headerShown: false,
+                    title: "Success",
+                  }}
+                />
               </Stack>
             </ThemeProvider>
           </TamaguiProvider>

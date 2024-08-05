@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -6,57 +6,160 @@ import {
   StyleSheet,
   TouchableOpacity,
   SafeAreaView,
-  FlatList,
   ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { useNavigation } from "expo-router";
 import StepIndicator from "../../components/StepIndicator";
-
+import InvoiceTable from "../../components/InvoiceTable";
+import { api } from "../../utils/api";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRecoilState } from "recoil";
+import { globalState } from "../../utils/atom";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import LoaderWithOverlay from "../../components/common/looding";
 const Contact = ({ route }) => {
   const navigation = useNavigation();
+  const [gState, setgState] = useRecoilState(globalState);
+
+  console.log({ gState });
+
+  const [clientMeubles, setClientMeubles] = useState([]);
+  const [isLooding, setIsLooding] = useState(false);
 
   const [clientInfo, setClientInfo] = useState({
-    name: "",
+    nom_prenom: "",
     email: "",
     tel: "",
-    date: new Date(),
+    date: new Date().toISOString(), // Ensure date is a string
     message: "",
   });
-
+  const [clientFormErrors, setClientFormErrors] = useState({
+    nom_prenom: false,
+    email: false,
+    tel: false,
+    date: false,
+    message: false,
+  });
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  useEffect(() => {
+    const loadClientMeubles = async () => {
+      const storedMeubles = await AsyncStorage.getItem("meubles");
+      if (storedMeubles) {
+        setClientMeubles(JSON.parse(storedMeubles));
+      }
+    };
+    loadClientMeubles();
+  }, []);
+
+  useEffect(() => {
+    const loadClientInfo = async () => {
+      const storedClientForm = await AsyncStorage.getItem("clientForm");
+      if (storedClientForm) {
+        const parsedClientForm = JSON.parse(storedClientForm);
+        setClientInfo(parsedClientForm);
+      }
+    };
+    loadClientInfo();
+  }, []);
+
   const handleDateChange = (event, selectedDate) => {
-    const currentDate = selectedDate || clientInfo.date;
+    const currentDate = selectedDate || new Date();
     setShowDatePicker(false);
-    setClientInfo({ ...clientInfo, date: currentDate });
+    setClientInfo({ ...clientInfo, date: currentDate.toISOString() });
   };
 
-  const goToNextStep = () => {
-    // Logic to proceed to the next step
+  const validateForm = () => {
+    const form = clientInfo;
+    let formErrors = { ...clientFormErrors };
+    let formValid = true;
+
+    for (const key in form) {
+      if (form[key].length < 2 && key !== "message") {
+        formErrors[key] = true;
+        formValid = false;
+      } else {
+        formErrors[key] = false;
+      }
+    }
+
+    setClientFormErrors(formErrors);
+    return formValid;
+  };
+
+  const goToNextStep = async () => {
+    setIsLooding(true);
+    if (validateForm()) {
+      const updatedGState = {
+        meubles: clientMeubles,
+        form_client: clientInfo,
+        form_address: {
+          dep: {
+            type: "Depart",
+            ...gState.form_address.dep,
+          },
+          arr: {
+            type: "Arrivee",
+            ...gState.form_address.arr,
+          },
+        },
+      };
+
+      setgState(updatedGState);
+
+      await AsyncStorage.setItem("clientForm", JSON.stringify(clientInfo));
+
+      try {
+        const response = await api.post("/api/post-request", updatedGState);
+        console.log("Response:", response);
+
+        if (response.status) {
+          console.log("Success response:", response);
+
+          // Clear stored data
+          await AsyncStorage.removeItem("departAddress");
+          await AsyncStorage.removeItem("arriveeAddress");
+          await AsyncStorage.removeItem("clientForm");
+          await AsyncStorage.removeItem("meubles");
+          await AsyncStorage.removeItem("currentStep");
+
+          // Reset global state
+          setgState({
+            meubles: null,
+            form_address: null,
+            form_client: null,
+          });
+
+          // Navigate to success screen
+          navigation.navigate("success");
+          setIsLooding(false);
+        } else {
+          setIsLooding(false);
+
+          console.error("Failed to submit request:", response.data.message);
+          throw new Error("Failed to submit request: " + response.data.message);
+        }
+      } catch (error) {
+        setIsLooding(false);
+
+        console.error("Error submitting client info:", error);
+        console.error(
+          "Error details:",
+          error.response?.data || error.message || error
+        );
+      }
+    } else {
+      console.error("Please fill in all required fields.");
+    }
   };
 
   const goToPreviousStep = () => {
     navigation.goBack();
   };
 
-  const renderSummaryItem = ({ item }) => (
-    <View style={styles.summaryItem}>
-      <Text style={styles.summaryItemText}>
-        {item.label}: {item.value}
-      </Text>
-    </View>
-  );
-
-  // Sample data for summary, replace with actual data from previous steps
-  const summaryData = route?.params?.summaryData || [
-    { id: "1", label: "Adresse de Départ", value: "Sahloul" },
-    { id: "2", label: "Adresse d'Arrivée", value: "Khezama" },
-    { id: "3", label: "Meubles", value: "Buffet, Bureau" },
-  ];
-
   return (
     <SafeAreaView style={styles.container}>
+      {isLooding && <LoaderWithOverlay />}
       <StepIndicator currentStep={3} />
       <ScrollView
         contentContainerStyle={styles.formContainer}
@@ -64,59 +167,98 @@ const Contact = ({ route }) => {
         keyboardShouldPersistTaps="always"
       >
         <Text style={styles.title}>Client Form</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Nom Prenom"
-          placeholderTextColor="#888"
-          value={clientInfo.name}
-          onChangeText={(text) => setClientInfo({ ...clientInfo, name: text })}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          placeholderTextColor="#888"
-          value={clientInfo.email}
-          onChangeText={(text) => setClientInfo({ ...clientInfo, email: text })}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Tel"
-          placeholderTextColor="#888"
-          value={clientInfo.tel}
-          onChangeText={(text) => setClientInfo({ ...clientInfo, tel: text })}
-        />
-        <TouchableOpacity
-          style={styles.datePickerButton}
-          onPress={() => setShowDatePicker(true)}
-        >
-          <Text style={styles.datePickerButtonText}>
-            {clientInfo.date.toDateString()}
-          </Text>
-        </TouchableOpacity>
-        {showDatePicker && (
-          <DateTimePicker
-            value={clientInfo.date}
-            mode="date"
-            display="default"
-            onChange={handleDateChange}
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[
+              styles.input,
+              clientFormErrors.nom_prenom && styles.errorInput,
+            ]}
+            placeholder="Nom Prenom"
+            placeholderTextColor="#888"
+            value={clientInfo.nom_prenom}
+            onChangeText={(text) =>
+              setClientInfo({ ...clientInfo, nom_prenom: text })
+            }
           />
-        )}
-        <TextInput
-          style={[styles.input, styles.messageInput]}
-          placeholder="Message"
-          placeholderTextColor="#888"
-          value={clientInfo.message}
-          onChangeText={(text) =>
-            setClientInfo({ ...clientInfo, message: text })
-          }
-          multiline
-        />
+          {clientFormErrors.nom_prenom && (
+            <Text style={styles.errorText}>
+              Please provide a valid nom_prenom.
+            </Text>
+          )}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, clientFormErrors.email && styles.errorInput]}
+            placeholder="Email"
+            placeholderTextColor="#888"
+            value={clientInfo.email}
+            onChangeText={(text) =>
+              setClientInfo({ ...clientInfo, email: text })
+            }
+          />
+          {clientFormErrors.email && (
+            <Text style={styles.errorText}>Please provide a valid email.</Text>
+          )}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, clientFormErrors.tel && styles.errorInput]}
+            placeholder="Tel"
+            placeholderTextColor="#888"
+            value={clientInfo.tel}
+            onChangeText={(text) => setClientInfo({ ...clientInfo, tel: text })}
+          />
+          {clientFormErrors.tel && (
+            <Text style={styles.errorText}>Please provide a valid tel.</Text>
+          )}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TouchableOpacity
+            style={styles.datePickerButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.datePickerButtonText}>
+              {new Date(clientInfo.date).toDateString()}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={new Date(clientInfo.date)}
+              mode="date"
+              display="default"
+              onChange={handleDateChange}
+            />
+          )}
+          {clientFormErrors.date && (
+            <Text style={styles.errorText}>Please provide a valid date.</Text>
+          )}
+        </View>
+
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={[styles.input, styles.messageInput]}
+            placeholder="Message"
+            placeholderTextColor="#888"
+            value={clientInfo.message}
+            onChangeText={(text) =>
+              setClientInfo({ ...clientInfo, message: text })
+            }
+            multiline
+          />
+        </View>
+
+        <InvoiceTable data={{ ...gState, meubles: clientMeubles }} />
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={[styles.button, styles.previousButton]}
             onPress={goToPreviousStep}
           >
-            <Text style={styles.buttonText}>Back</Text>
+            <Text style={styles.buttonText}>Previous</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, styles.nextButton]}
@@ -126,14 +268,6 @@ const Contact = ({ route }) => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      <View style={styles.summaryContainer}>
-        <Text style={styles.summaryTitle}>Summary of Selected Information</Text>
-        <FlatList
-          data={summaryData}
-          renderItem={renderSummaryItem}
-          keyExtractor={(item) => item.id}
-        />
-      </View>
     </SafeAreaView>
   );
 };
@@ -155,13 +289,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#4f46e5",
   },
-  input: {
+  inputContainer: {
+    marginBottom: 16,
     width: "90%",
+  },
+  input: {
     height: 40,
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
-    marginBottom: 16,
     paddingHorizontal: 10,
     backgroundColor: "#fff",
   },
@@ -169,14 +305,12 @@ const styles = StyleSheet.create({
     height: 100,
   },
   datePickerButton: {
-    width: "90%",
     height: 40,
     borderColor: "#ccc",
     borderWidth: 1,
     borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
     backgroundColor: "#fff",
   },
   datePickerButtonText: {
@@ -206,24 +340,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
   },
-  summaryContainer: {
-    marginTop: 20,
-    width: "100%",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    elevation: 3,
+  errorInput: {
+    borderColor: "red",
   },
-  summaryTitle: {
-    fontSize: 22,
-    fontWeight: "600",
-    marginBottom: 10,
-  },
-  summaryItem: {
-    marginBottom: 10,
-  },
-  summaryItemText: {
-    fontSize: 16,
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    alignSelf: "flex-start",
   },
 });
 

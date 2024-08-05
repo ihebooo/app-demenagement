@@ -20,7 +20,9 @@ const StepIndicator = ({ currentStep }) => {
               ]}
             >
               {currentStep > step.key && (
-                <Text style={styles.checkmark}>✔</Text>
+                <View style={styles.checkmark}>
+                  <Text>✔</Text>
+                </View>
               )}
               {currentStep === step.key && (
                 <Text style={styles.stepNumber}>{step.key}</Text>
@@ -64,6 +66,8 @@ const styles = StyleSheet.create({
   },
   checkmark: {
     color: "#fff",
+    backgroundColor: "#fff",
+    borderRadius: "50%",
     fontWeight: "bold",
   },
   stepNumber: {

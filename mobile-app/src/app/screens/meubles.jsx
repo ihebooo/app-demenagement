@@ -12,26 +12,27 @@ import { useNavigation } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import StepIndicator from "../../components/StepIndicator";
 import { api } from "../../utils/api";
-import { useRecoilState } from "recoil";
-import { globalState } from "../../utils/atom";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SvgUri } from "react-native-svg";
 
 const Meubles = () => {
   const [clientMeubles, setClientMeubles] = useState([]);
   const navigation = useNavigation();
 
-  const { data, isLoading, error, isFetching, isError, refetch } = useQuery(
+  const { data, isLoading, error, isError } = useQuery(
     ["get-meubles"],
-    async () => api.get(`categories`),
-    {
-      onSuccess: (res) => {
-        console.log("aa", res);
-      },
-      onError: (error) => {
-        console.warn("ddd ", error);
-      },
-    }
+    async () => api.get(`categories`)
   );
+
+  useEffect(() => {
+    const loadClientMeubles = async () => {
+      const storedMeubles = await AsyncStorage.getItem("meubles");
+      if (storedMeubles) {
+        setClientMeubles(JSON.parse(storedMeubles));
+      }
+    };
+    loadClientMeubles();
+  }, []);
 
   const incrementMeuble = (meuble) => {
     setClientMeubles((prevState) => {
@@ -41,7 +42,6 @@ const Meubles = () => {
       if (foundMeuble) {
         foundMeuble.quantity += 1;
       } else {
-        console.log({ updatedMeubles });
         updatedMeubles.push({ ...meuble, quantity: 1 });
       }
 
@@ -67,7 +67,8 @@ const Meubles = () => {
     return foundMeuble ? foundMeuble.quantity : 0;
   };
 
-  const goToAddressPage = () => {
+  const goToAddressPage = async () => {
+    await AsyncStorage.setItem("meubles", JSON.stringify(clientMeubles));
     navigation.navigate("screens/address");
   };
 
@@ -184,7 +185,6 @@ const styles = StyleSheet.create({
   meubleImage: {
     width: 100,
     height: 100,
-    //backgroundColor: "black",
     resizeMode: "contain",
     marginBottom: 15,
   },

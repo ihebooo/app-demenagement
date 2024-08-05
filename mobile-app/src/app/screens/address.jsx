@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -8,29 +8,98 @@ import {
   SafeAreaView,
   ScrollView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
-import { Dropdown } from "react-native-element-dropdown";
+import { useNavigation } from "expo-router";
 import StepIndicator from "../../components/StepIndicator";
-import { countryList } from "../../utils/countryList"; 
+import { countryList } from "../../utils/countryList";
+import { useRecoilState } from "recoil";
+import { globalState } from "../../utils/atom";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Dropdown } from "react-native-element-dropdown";
 
 const Address = () => {
   const [departAddress, setDepartAddress] = useState({
+    type: "Depart",
     rue: "",
-    codePostal: "",
+    code_postal: "",
     ville: "",
-    pays: "Tunisia",
+    pays: "",
   });
   const [arriveeAddress, setArriveeAddress] = useState({
+    type: "Arrivee",
     rue: "",
-    codePostal: "",
+    code_postal: "",
     ville: "",
-    pays: "Tunisia",
+    pays: "",
   });
-
+  const [departFormErrors, setDepartFormErrors] = useState({});
+  const [arriveeFormErrors, setArriveeFormErrors] = useState({});
+  const [gState, setgState] = useRecoilState(globalState);
   const navigation = useNavigation();
 
-  const goToNextStep = () => {
-    navigation.navigate("screens/contact");
+  useEffect(() => {
+    const loadAddresses = async () => {
+      const storedDepartAddress = await AsyncStorage.getItem("departAddress");
+      const storedArriveeAddress = await AsyncStorage.getItem("arriveeAddress");
+
+      if (storedDepartAddress) {
+        setDepartAddress(JSON.parse(storedDepartAddress));
+      }
+      if (storedArriveeAddress) {
+        setArriveeAddress(JSON.parse(storedArriveeAddress));
+      }
+    };
+
+    loadAddresses();
+  }, []);
+
+  const validateForm = (form) => {
+    let formErrors = {};
+    let isValid = true;
+
+    for (const key in form) {
+      if (form[key].length < 2) {
+        formErrors[key] = true;
+        isValid = false;
+      } else {
+        formErrors[key] = false;
+      }
+    }
+
+    return { isValid, formErrors };
+  };
+
+  const goToNextStep = async () => {
+    const { isValid: isDepartValid, formErrors: departErrors } =
+      validateForm(departAddress);
+    const { isValid: isArriveeValid, formErrors: arriveeErrors } =
+      validateForm(arriveeAddress);
+
+    if (isDepartValid && isArriveeValid) {
+      setgState({
+        ...gState,
+        form_address: { dep: departAddress, arr: arriveeAddress },
+      });
+
+      await AsyncStorage.setItem(
+        "departAddress",
+        JSON.stringify(departAddress)
+      );
+      await AsyncStorage.setItem(
+        "arriveeAddress",
+        JSON.stringify(arriveeAddress)
+      );
+
+      navigation.navigate("screens/contact", {
+        summaryData: {
+          departAddress,
+          arriveeAddress,
+          meubles: gState.meubles,
+        },
+      });
+    } else {
+      setDepartFormErrors(departErrors);
+      setArriveeFormErrors(arriveeErrors);
+    }
   };
 
   const goToPreviousStep = () => {
@@ -49,7 +118,7 @@ const Address = () => {
         <View style={styles.addressSection}>
           <Text style={styles.sectionTitle}>Adresse de Départ</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, departFormErrors.rue && styles.errorInput]}
             placeholder="Rue"
             placeholderTextColor="#888"
             value={departAddress.rue}
@@ -57,18 +126,29 @@ const Address = () => {
               setDepartAddress({ ...departAddress, rue: value })
             }
           />
+          {departFormErrors.rue && (
+            <Text style={styles.errorText}>Please provide a valid rue.</Text>
+          )}
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              departFormErrors.code_postal && styles.errorInput,
+            ]}
             placeholder="Code Postal"
             placeholderTextColor="#888"
-            value={departAddress.codePostal}
+            value={departAddress.code_postal}
             onChangeText={(value) =>
-              setDepartAddress({ ...departAddress, codePostal: value })
+              setDepartAddress({ ...departAddress, code_postal: value })
             }
             keyboardType="numeric"
           />
+          {departFormErrors.code_postal && (
+            <Text style={styles.errorText}>
+              Please provide a valid code postal.
+            </Text>
+          )}
           <TextInput
-            style={styles.input}
+            style={[styles.input, departFormErrors.ville && styles.errorInput]}
             placeholder="Ville"
             placeholderTextColor="#888"
             value={departAddress.ville}
@@ -76,6 +156,9 @@ const Address = () => {
               setDepartAddress({ ...departAddress, ville: value })
             }
           />
+          {departFormErrors.ville && (
+            <Text style={styles.errorText}>Please provide a valid ville.</Text>
+          )}
           <Dropdown
             style={styles.dropdown}
             data={countryList}
@@ -87,6 +170,9 @@ const Address = () => {
               setDepartAddress({ ...departAddress, pays: item.value })
             }
           />
+          {departFormErrors.pays && (
+            <Text style={styles.errorText}>Please select a country.</Text>
+          )}
         </View>
         <View style={styles.separatorContainer}>
           <View style={styles.separator} />
@@ -96,7 +182,7 @@ const Address = () => {
         <View style={styles.addressSection}>
           <Text style={styles.sectionTitle}>Adresse d'Arrivée</Text>
           <TextInput
-            style={styles.input}
+            style={[styles.input, arriveeFormErrors.rue && styles.errorInput]}
             placeholder="Rue"
             placeholderTextColor="#888"
             value={arriveeAddress.rue}
@@ -104,18 +190,29 @@ const Address = () => {
               setArriveeAddress({ ...arriveeAddress, rue: value })
             }
           />
+          {arriveeFormErrors.rue && (
+            <Text style={styles.errorText}>Please provide a valid rue.</Text>
+          )}
           <TextInput
-            style={styles.input}
+            style={[
+              styles.input,
+              arriveeFormErrors.code_postal && styles.errorInput,
+            ]}
             placeholder="Code Postal"
             placeholderTextColor="#888"
-            value={arriveeAddress.codePostal}
+            value={arriveeAddress.code_postal}
             onChangeText={(value) =>
-              setArriveeAddress({ ...arriveeAddress, codePostal: value })
+              setArriveeAddress({ ...arriveeAddress, code_postal: value })
             }
             keyboardType="numeric"
           />
+          {arriveeFormErrors.code_postal && (
+            <Text style={styles.errorText}>
+              Please provide a valid code postal.
+            </Text>
+          )}
           <TextInput
-            style={styles.input}
+            style={[styles.input, arriveeFormErrors.ville && styles.errorInput]}
             placeholder="Ville"
             placeholderTextColor="#888"
             value={arriveeAddress.ville}
@@ -123,6 +220,9 @@ const Address = () => {
               setArriveeAddress({ ...arriveeAddress, ville: value })
             }
           />
+          {arriveeFormErrors.ville && (
+            <Text style={styles.errorText}>Please provide a valid ville.</Text>
+          )}
           <Dropdown
             style={styles.dropdown}
             data={countryList}
@@ -134,6 +234,9 @@ const Address = () => {
               setArriveeAddress({ ...arriveeAddress, pays: item.value })
             }
           />
+          {arriveeFormErrors.pays && (
+            <Text style={styles.errorText}>Please select a country.</Text>
+          )}
         </View>
         <View style={styles.buttonContainer}>
           <TouchableOpacity
@@ -241,6 +344,15 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  errorInput: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    alignSelf: "flex-start",
+    marginLeft: "5%",
   },
 });
 
